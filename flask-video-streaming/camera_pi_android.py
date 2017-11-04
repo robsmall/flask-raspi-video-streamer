@@ -4,6 +4,9 @@ import picamera
 from base_camera import BaseCamera
 # from threading import Condition
 
+CAMERA_MAP = {}
+
+
 # Taken from picamera.readthedocs.io section 4.10
 class StreamingOutput(object):
     def __init__(self):
@@ -24,9 +27,16 @@ class StreamingOutput(object):
 
 
 class Camera(BaseCamera):
-    @staticmethod
-    def frames():
-        with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
+    def __init__(self, uid=None):
+        super(Camera, self).__init__()
+        self.uid = uid
+        if self.uid is not None:
+            CAMERA_MAP[self.uid] = self
+
+        print(CAMERA_MAP)
+
+    def frames(self):
+        with picamera.PiCamera(resolution='640x480', framerate=30) as camera:
             # # let camera warm up
             # time.sleep(2)
 
@@ -57,3 +67,7 @@ class Camera(BaseCamera):
             except Exception as e:
                 print('Removed streaming client {0}: {1}'.format(
                       self.client_address, str(e)))
+            finally:
+                camera.close()
+                print ('Deleting camera from map')
+                del CAMERA_MAP[self.uid]

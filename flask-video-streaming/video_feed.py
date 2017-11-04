@@ -16,9 +16,8 @@ if os.environ.get('CAMERA'):
 else:
     from camera import Camera
 
-camera_map = {}
 
-
+# TODO: wrapper function to set the uid
 class VideoFeedHandler(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
@@ -26,10 +25,10 @@ class VideoFeedHandler(Resource):
 
     def get(self):
         args = self.parser.parse_args()
-        uid = args.get('uid', None)
+        self.uid = args.get('uid', None)
 
         # print("uid = {}".format(uid), file=sys.stderr)
-        print("uid = {}".format(uid))
+        print("uid = {}".format(self.uid))
 
         return self.video_feed()
 
@@ -57,7 +56,8 @@ class VideoFeedHandler(Resource):
         # self.end_headers()
         # self.wfile.write(frame)
         # self.wfile.write(b'\r\n')
-        camera = Camera()
+        camera = Camera(self.uid)
+
         return Response(response=stream_with_context(self.generate_frame(camera)),
                         status=200,
                         mimetype='multipart/x-mixed-replace; boundary=frame')
