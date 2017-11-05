@@ -13,12 +13,45 @@ from flask_restful import reqparse
 # Import camera driver
 if os.environ.get('CAMERA'):
     Camera = import_module('camera_' + os.environ['CAMERA']).Camera
+    # TODO: lets remove everything but the android camera one... or duplicate
+    # functionality and remove code
+    CAMERA_MAP = import_module('camera_' + os.environ['CAMERA']).CAMERA_MAP
 else:
     from camera import Camera
+    from camera import CAMERA_MAP
+
+
+# TODO: wrapper function to set the uid
+# TODO: make sure we block this for everyone, until a user hits a StartFeedHandler.
+#       start feed needs to be from the same user
+class StopFeedHandler(Resource):
+    """
+    Handler to stop the feed for all cameras.
+    """
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('uid', type=str)
+
+    def post(self):
+        args = self.parser.parse_args()
+        self.uid = args.get('uid', None)
+
+        print("Stop feed called from user: {}".format(self.uid))
+
+        self.stop_all_cameras()
+
+    def stop_all_cameras(self):
+        for uid, camera in CAMERA_MAP.iteritems():
+            print("Closing camera for user: {}".format(self.uid))
+            camera.close()
 
 
 # TODO: wrapper function to set the uid
 class VideoFeedHandler(Resource):
+    """
+    Handler to start the feed for a camera and add the camera to the
+    CAMERA_MAP.
+    """
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('uid', type=str)

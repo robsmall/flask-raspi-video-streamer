@@ -27,13 +27,11 @@ class StreamingOutput(object):
 
 
 class Camera(BaseCamera):
-    def __init__(self, uid=None):
-        super(Camera, self).__init__()
-        self.uid = uid
-        if self.uid is not None:
-            CAMERA_MAP[self.uid] = self
+    uid = None
 
-        print(CAMERA_MAP)
+    def __init__(self, uid=None):
+        self.uid = uid
+        super(Camera, self).__init__()
 
     def frames(self):
         with picamera.PiCamera(resolution='640x480', framerate=30) as camera:
@@ -52,6 +50,13 @@ class Camera(BaseCamera):
             #     stream.truncate()
             output = StreamingOutput()
             camera.start_recording(output, format='mjpeg')
+
+            if self.uid is not None:
+                print("Adding camera for user: {}".format(self.uid))
+                CAMERA_MAP[self.uid] = camera
+
+            print(CAMERA_MAP)
+            
             try:
                 while True:
                     # with output.condition:
