@@ -18,5 +18,6 @@ def index():
 api.add_resource(video_feed.VideoFeedHandler, '/video_feed')
 api.add_resource(video_feed.StopFeedHandler, '/stop_feed')
 
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True, debug=True)

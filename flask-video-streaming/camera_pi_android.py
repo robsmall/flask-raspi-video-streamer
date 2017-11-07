@@ -75,4 +75,5 @@ class Camera(BaseCamera):
             finally:
                 camera.close()
                 print ('Deleting camera from map')
-                del CAMERA_MAP[self.uid]
+                if self.uid is not None:
+                    del CAMERA_MAP[self.uid]

@@ -9,6 +9,8 @@ from flask import stream_with_context
 from flask_restful import Resource
 from flask_restful import reqparse
 
+from base import BaseHandler
+
 
 # Import camera driver
 if os.environ.get('CAMERA'):
@@ -24,7 +26,7 @@ else:
 # TODO: wrapper function to set the uid
 # TODO: make sure we block this for everyone, until a user hits a StartFeedHandler.
 #       start feed needs to be from the same user
-class StopFeedHandler(Resource):
+class StopFeedHandler(BaseHandler):
     """
     Handler to stop the feed for all cameras.
     """
@@ -40,6 +42,10 @@ class StopFeedHandler(Resource):
 
         self.stop_all_cameras()
 
+        params = {}
+
+        return self.success_response(params)
+
     def stop_all_cameras(self):
         for uid, camera in CAMERA_MAP.iteritems():
             print("Closing camera for user: {}".format(self.uid))
@@ -47,7 +53,7 @@ class StopFeedHandler(Resource):
 
 
 # TODO: wrapper function to set the uid
-class VideoFeedHandler(Resource):
+class VideoFeedHandler(BaseHandler):
     """
     Handler to start the feed for a camera and add the camera to the
     CAMERA_MAP.
