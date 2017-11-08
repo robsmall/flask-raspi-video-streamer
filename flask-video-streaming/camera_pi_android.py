@@ -32,8 +32,14 @@ class Camera(BaseCamera):
 
     def __init__(self, uid=None):
         self.uid = uid
-        self.output = StreamingOutput()
-        self.camera = picamera.PiCamera(resolution='640x480', framerate=30)
+
+        if self.uid in CAMERA_MAP:
+            self.camera = CAMERA_MAP[self.uid].camera
+            self.output = CAMERA_MAP[self.uid].output
+        else:
+            self.output = StreamingOutput()
+            self.camera = picamera.PiCamera(resolution='640x480', framerate=30)
+
         super(Camera, self).__init__()
 
     def frames(self):

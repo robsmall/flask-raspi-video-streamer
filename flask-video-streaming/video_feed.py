@@ -117,7 +117,6 @@ class VideoFeedHandler(BaseHandler):
         args = self.parser.parse_args()
         self.uid = args.get('uid', None)
 
-        # print("uid = {}".format(uid), file=sys.stderr)
         print("uid = {}".format(self.uid))
 
         return self.video_feed()
