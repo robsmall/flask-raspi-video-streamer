@@ -61,12 +61,13 @@ class EnableFeedHandler(BaseHandler):
         cameras in the CAMERA_MAP if the current user is the only blocking user.
         """
         if self.uid in USER_STOP_LIST:
-            USER_STOP_LIST.remove(uid)
+            USER_STOP_LIST.remove(self.uid)
             print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
 
             if not USER_STOP_LIST:
                 for uid, camera in CAMERA_MAP.iteritems():
-                    print("Closing camera for user: {}".format(self.uid))
+                    print("Enabling camera for user: {}".format(self.uid))
+                    camera.camera.start_recording(camera.output, format='mjpeg')
             
 
 class DisableFeedHandler(BaseHandler):
@@ -96,9 +97,9 @@ class DisableFeedHandler(BaseHandler):
 
         print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
         for uid, camera in CAMERA_MAP.iteritems():
-            print("Disabling camera for user: {}".format(self.uid))
+            print("Closing camera for user: {}".format(self.uid))
             try:
-                camera.stop_recording()
+                camera.camera.stop_recording()
             except PiCameraNotRecording as e:
                 print("Camera is not currently recording: {}".format(uid))
 

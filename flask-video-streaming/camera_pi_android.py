@@ -32,54 +32,54 @@ class Camera(BaseCamera):
 
     def __init__(self, uid=None):
         self.uid = uid
+        self.output = StreamingOutput()
+        self.camera = picamera.PiCamera(resolution='640x480', framerate=30)
         super(Camera, self).__init__()
 
     def frames(self):
-        with picamera.PiCamera(resolution='640x480', framerate=30) as camera:
-            # # let camera warm up
-            # time.sleep(2)
+        # # let camera warm up
+        # time.sleep(2)
 
-            # stream = StreamingOutput ()
-            # for foo in camera.capture_continuous(stream, 'jpeg',
-            #                                      use_video_port=True):
-            #     # return current frame
-            #     stream.seek(0)
-            #     yield stream.read()
+        # stream = StreamingOutput ()
+        # for foo in camera.capture_continuous(stream, 'jpeg',
+        #                                      use_video_port=True):
+        #     # return current frame
+        #     stream.seek(0)
+        #     yield stream.read()
 
-            #     # reset stream for next frame
-            #     stream.seek(0)
-            #     stream.truncate()
-            output = StreamingOutput()
-            camera.start_recording(output, format='mjpeg')
+        #     # reset stream for next frame
+        #     stream.seek(0)
+        #     stream.truncate()
+        self.camera.start_recording(self.output, format='mjpeg')
 
+        if self.uid is not None:
+            print("Adding camera for user: {}.".format(self.uid))
+            CAMERA_MAP[self.uid] = self
+
+        print(CAMERA_MAP)
+        
+        try:
+            while True:
+                # with output.condition:
+                    # output.condition.wait()
+                frame = self.output.frame
+                yield frame
+                # self.wfile.write(b'--FRAME\r\n')
+                # self.send_header('Content-Type', 'image/jpeg')
+                # self.send_header('Content-Length', len(frame))
+                # self.end_headers()
+                # self.wfile.write(frame)
+                # self.wfile.write(b'\r\n')
+        except Exception as e:
+            print('Removed streaming client {0}: {1}.'.format(
+                  self.client_address, str(e)))
+        finally:
+            print ('Closing and deleting camera instance.')
+            self.camera.close()
             if self.uid is not None:
-                print("Adding camera for user: {}.".format(self.uid))
-                CAMERA_MAP[self.uid] = camera
+                del CAMERA_MAP[self.uid]
+                if self.uid in USER_STOP_LIST:
+                    USER_STOP_LIST.remove(self.uid)
 
-            print(CAMERA_MAP)
-            
-            try:
-                while True:
-                    # with output.condition:
-                        # output.condition.wait()
-                    frame = output.frame
-                    yield frame
-                    # self.wfile.write(b'--FRAME\r\n')
-                    # self.send_header('Content-Type', 'image/jpeg')
-                    # self.send_header('Content-Length', len(frame))
-                    # self.end_headers()
-                    # self.wfile.write(frame)
-                    # self.wfile.write(b'\r\n')
-            except Exception as e:
-                print('Removed streaming client {0}: {1}.'.format(
-                      self.client_address, str(e)))
-            finally:
-                print ('Closing and deleting camera instance.')
-                camera.close()
-                if self.uid is not None:
-                    del CAMERA_MAP[self.uid]
-                    if self.uid in USER_STOP_LIST:
-                        USER_STOP_LIST.remove(self.uid)
-
-                    print('\nCamera Map: {}\n'.format(CAMERA_MAP))
-                    print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
+                print('\nCamera Map: {}\n'.format(CAMERA_MAP))
+                print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
