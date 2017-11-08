@@ -16,7 +16,8 @@ def index():
 
 # Add handlers.
 api.add_resource(video_feed.VideoFeedHandler, '/video_feed')
-api.add_resource(video_feed.StopFeedHandler, '/stop_feed')
+api.add_resource(video_feed.DisableFeedHandler, '/disable_feed')
+api.add_resource(video_feed.EnableFeedHandler, '/enable_feed')
 
 
 if __name__ == '__main__':

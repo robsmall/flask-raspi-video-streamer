@@ -5,6 +5,7 @@ from base_camera import BaseCamera
 # from threading import Condition
 
 CAMERA_MAP = {}
+USER_STOP_LIST = set()
 
 
 # Taken from picamera.readthedocs.io section 4.10
@@ -52,7 +53,7 @@ class Camera(BaseCamera):
             camera.start_recording(output, format='mjpeg')
 
             if self.uid is not None:
-                print("Adding camera for user: {}".format(self.uid))
+                print("Adding camera for user: {}.".format(self.uid))
                 CAMERA_MAP[self.uid] = camera
 
             print(CAMERA_MAP)
@@ -70,10 +71,15 @@ class Camera(BaseCamera):
                     # self.wfile.write(frame)
                     # self.wfile.write(b'\r\n')
             except Exception as e:
-                print('Removed streaming client {0}: {1}'.format(
+                print('Removed streaming client {0}: {1}.'.format(
                       self.client_address, str(e)))
             finally:
+                print ('Closing and deleting camera instance.')
                 camera.close()
-                print ('Deleting camera from map')
                 if self.uid is not None:
                     del CAMERA_MAP[self.uid]
+                    if self.uid in USER_STOP_LIST:
+                        USER_STOP_LIST.remove(self.uid)
+
+                    print('\nCamera Map: {}\n'.format(CAMERA_MAP))
+                    print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))

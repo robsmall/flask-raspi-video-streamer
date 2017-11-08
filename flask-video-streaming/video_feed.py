@@ -8,9 +8,9 @@ from flask import Response
 from flask import stream_with_context
 from flask_restful import Resource
 from flask_restful import reqparse
+from picamera import PiCameraNotRecording
 
 from base import BaseHandler
-
 
 # Import camera driver
 if os.environ.get('CAMERA'):
@@ -18,17 +18,24 @@ if os.environ.get('CAMERA'):
     # TODO: lets remove everything but the android camera one... or duplicate
     # functionality and remove code
     CAMERA_MAP = import_module('camera_' + os.environ['CAMERA']).CAMERA_MAP
+    USER_STOP_LIST = import_module('camera_' + os.environ['CAMERA']).USER_STOP_LIST
 else:
     from camera import Camera
     from camera import CAMERA_MAP
+    from camera import USER_STOP_LIST
 
+'''
+TODOS:
+    - Wrapper function to get and set the uid
+    - Error return wrapper
+'''
 
-# TODO: wrapper function to set the uid
-# TODO: make sure we block this for everyone, until a user hits a StartFeedHandler.
-#       start feed needs to be from the same user
-class StopFeedHandler(BaseHandler):
+class EnableFeedHandler(BaseHandler):
     """
-    Handler to stop the feed for all cameras.
+    Handler to enable the feed for all cameras.
+
+    Note: If another user is also disabling all feeds, then the feed will not
+          be enabled until all users re-enable.
     """
     def __init__(self):
         self.parser = reqparse.RequestParser()
@@ -38,21 +45,64 @@ class StopFeedHandler(BaseHandler):
         args = self.parser.parse_args()
         self.uid = args.get('uid', None)
 
-        print("Stop feed called from user: {}".format(self.uid))
+        print("Enable feed called from user: {}".format(self.uid))
 
-        self.stop_all_cameras()
+        self.enable_cameras()
 
-        params = {}
+        params = {
+            "blocking_cameras": len(USER_STOP_LIST),
+        }
 
         return self.success_response(params)
 
-    def stop_all_cameras(self):
+    def enable_cameras(self):
+        """
+        Remove the current user's uid from the USER_STOP_LIST and enable all
+        cameras in the CAMERA_MAP if the current user is the only blocking user.
+        """
+        if self.uid in USER_STOP_LIST:
+            USER_STOP_LIST.remove(uid)
+            print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
+
+            if not USER_STOP_LIST:
+                for uid, camera in CAMERA_MAP.iteritems():
+                    print("Closing camera for user: {}".format(self.uid))
+            
+
+class DisableFeedHandler(BaseHandler):
+    """
+    Handler to disable the feed for all cameras.
+    """
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('uid', type=str)
+
+    def post(self):
+        args = self.parser.parse_args()
+        self.uid = args.get('uid', None)
+
+        print("Disable feed called from user: {}".format(self.uid))
+
+        self.disable_cameras()
+
+        params = {
+            "blocking_cameras": len(USER_STOP_LIST),
+        }
+
+        return self.success_response(params)
+
+    def disable_cameras(self):
+        USER_STOP_LIST.add(self.uid)
+
+        print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
         for uid, camera in CAMERA_MAP.iteritems():
-            print("Closing camera for user: {}".format(self.uid))
-            camera.close()
+            print("Disabling camera for user: {}".format(self.uid))
+            try:
+                camera.stop_recording()
+            except PiCameraNotRecording as e:
+                print("Camera is not currently recording: {}".format(uid))
 
 
-# TODO: wrapper function to set the uid
 class VideoFeedHandler(BaseHandler):
     """
     Handler to start the feed for a camera and add the camera to the
