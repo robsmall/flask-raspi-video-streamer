@@ -84,6 +84,10 @@ class Camera(BaseCamera):
             self.camera.close()
             if self.uid is not None:
                 del CAMERA_MAP[self.uid]
+
+                # TODO: Don't do this, instead, when a user gets here next we
+                # should prompt them to disable the camera. Could even do
+                # something like timed disabling...
                 if self.uid in USER_STOP_LIST:
                     USER_STOP_LIST.remove(self.uid)
 
