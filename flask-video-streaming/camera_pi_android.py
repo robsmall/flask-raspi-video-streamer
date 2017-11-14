@@ -85,11 +85,13 @@ class Camera(BaseCamera):
             if self.uid is not None:
                 del CAMERA_MAP[self.uid]
 
-                # TODO: Don't do this, instead, when a user gets here next we
-                # should prompt them to disable the camera. Could even do
-                # something like timed disabling...
-                if self.uid in USER_STOP_LIST:
-                    USER_STOP_LIST.remove(self.uid)
+                # Note: We do not remove the uid from the user stop list to make
+                #       sure we don't re-enable the camera when a user stops
+                #       using the app. This could cause issues later so we should
+                #       probably ping the user the next time they open the app
+                #       to tell them to re-enable.
+                # if self.uid in USER_STOP_LIST:
+                #     USER_STOP_LIST.remove(self.uid)
 
                 print('\nCamera Map: {}\n'.format(CAMERA_MAP))
                 print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
