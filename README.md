@@ -6,6 +6,7 @@ Original code borrowed from [miguelgrinberg/flask-video-streaming](https://githu
 TODO
 ----
 - This is currently set up for `pi_android` and I doubt anything else works... fix that.
+- Get this to work with web clients or allow for running of the one-off `simple_mjpeg-server.py` script.
 
 
 Set Up A Virtual Environment To Run The App Using Virtualenv On A Pi
