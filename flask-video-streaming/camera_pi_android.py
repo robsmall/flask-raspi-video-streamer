@@ -38,7 +38,7 @@ class Camera(BaseCamera):
             self.output = CAMERA_MAP[self.uid].output
         else:
             self.output = StreamingOutput()
-            self.camera = picamera.PiCamera(resolution='640x480', framerate=30)
+            self.camera = picamera.PiCamera(sensor_mode=5, resolution="1640x922", framerate=40)
 
         super(Camera, self).__init__()
 

@@ -28,6 +28,7 @@ else:
 TODOS:
     - Wrapper function to get and set the uid
     - Error return wrapper
+    - Log datetime.datetime.now with all logs and wrap it in a function
 '''
 
 class EnableFeedHandler(BaseHandler):
