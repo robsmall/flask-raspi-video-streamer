@@ -2,9 +2,8 @@ import io
 import time
 import picamera
 from base_camera import BaseCamera
-# from threading import Condition
 
-CAMERA_MAP = {}
+
 USER_STOP_LIST = set()
 
 
@@ -20,77 +19,37 @@ class StreamingOutput(object):
             # New frame, copy the existing buffer's content and notify all
             # clients it's available
             self.buffer.truncate()
-            # with self.condition:
             self.frame = self.buffer.getvalue()
-                # self.condition.notify_all()
             self.buffer.seek(0)
         return self.buffer.write(buf)
 
 
 class Camera(BaseCamera):
-    uid = None
+    camera = None
+    output = None
 
-    def __init__(self, uid=None):
-        self.uid = uid
+    @staticmethod
+    def start_recording():
+        Camera.camera.start_recording(Camera.output, format='mjpeg')
 
-        if self.uid in CAMERA_MAP:
-            self.camera = CAMERA_MAP[self.uid].camera
-            self.output = CAMERA_MAP[self.uid].output
-        else:
-            self.output = StreamingOutput()
-            self.camera = picamera.PiCamera(sensor_mode=5, resolution="1640x922", framerate=40)
+    @staticmethod
+    def stop_recording():
+        Camera.camera.stop_recording()
 
-        super(Camera, self).__init__()
+    @staticmethod
+    def frames():
+        with picamera.PiCamera(sensor_mode=5, resolution="1640x922", framerate=40) as camera:
+            Camera.camera = camera
+            Camera.output = StreamingOutput()
 
-    def frames(self):
-        # # let camera warm up
-        # time.sleep(2)
-
-        # stream = StreamingOutput ()
-        # for foo in camera.capture_continuous(stream, 'jpeg',
-        #                                      use_video_port=True):
-        #     # return current frame
-        #     stream.seek(0)
-        #     yield stream.read()
-
-        #     # reset stream for next frame
-        #     stream.seek(0)
-        #     stream.truncate()
-        self.camera.start_recording(self.output, format='mjpeg')
-
-        if self.uid is not None:
-            print("Adding camera for user: {}.".format(self.uid))
-            CAMERA_MAP[self.uid] = self
-
-        print(CAMERA_MAP)
-        
-        try:
+            # Only start the camera if there are no users currently blocking
+            # the camera. If there are, the feed will be started when they
+            # re-enable the camera.
+            if not USER_STOP_LIST:
+                Camera.start_recording()
+            
             while True:
-                # with output.condition:
-                    # output.condition.wait()
-                frame = self.output.frame
+                # with self.output.condition:
+                    # self.output.condition.wait()
+                frame = Camera.output.frame
                 yield frame
-                # self.wfile.write(b'--FRAME\r\n')
-                # self.send_header('Content-Type', 'image/jpeg')
-                # self.send_header('Content-Length', len(frame))
-                # self.end_headers()
-                # self.wfile.write(frame)
-                # self.wfile.write(b'\r\n')
-        except Exception as e:
-            print('Error streaming frames: {0}.'.format(e))
-        finally:
-            print ('Closing and deleting camera instance.')
-            self.camera.close()
-            if self.uid is not None:
-                del CAMERA_MAP[self.uid]
-
-                # Note: We do not remove the uid from the user stop list to make
-                #       sure we don't re-enable the camera when a user stops
-                #       using the app. This could cause issues later so we should
-                #       probably ping the user the next time they open the app
-                #       to tell them to re-enable.
-                # if self.uid in USER_STOP_LIST:
-                #     USER_STOP_LIST.remove(self.uid)
-
-                print('\nCamera Map: {}\n'.format(CAMERA_MAP))
-                print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
