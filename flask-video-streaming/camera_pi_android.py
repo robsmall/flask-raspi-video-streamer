@@ -77,8 +77,7 @@ class Camera(BaseCamera):
                 # self.wfile.write(frame)
                 # self.wfile.write(b'\r\n')
         except Exception as e:
-            print('Removed streaming client {0}: {1}.'.format(
-                  self.client_address, str(e)))
+            print('Error streaming frames: {0}.'.format(e))
         finally:
             print ('Closing and deleting camera instance.')
             self.camera.close()
