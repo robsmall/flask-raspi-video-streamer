@@ -8,6 +8,7 @@ from flask import Response
 from flask import stream_with_context
 from flask_restful import Resource
 from flask_restful import reqparse
+from flask_restful import inputs
 from picamera import PiCameraNotRecording
 
 from base import BaseHandler
@@ -109,15 +110,25 @@ class VideoFeedHandler(BaseHandler):
     Handler to start the feed for the camera and add the given user to the
     USER_LIST.
     """
+    headers = {
+        'Age': 0,
+        'Cache-Control': 'no-cache, private',
+        'Pragma': 'no-cache',
+        'Content-Type': 'multipart/x-mixed-replace; boundary=frame',
+    }
+
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('uid', type=str)
+        self.parser.add_argument('is_mobile', type=inputs.boolean, default=False)
 
     def get(self):
         args = self.parser.parse_args()
         self.uid = args.get('uid', None)
+        self.is_mobile = args.get('is_mobile')
 
-        print("uid = {}".format(self.uid))
+        print("uid: {}".format(self.uid))
+        print("is_mobile: {}".format(self.is_mobile))
 
         return self.video_feed()
 
@@ -125,30 +136,26 @@ class VideoFeedHandler(BaseHandler):
         """ Video streaming generator function. """
         while True:
             frame = camera.get_frame()
-            # yield (b'--frame\r\n'
-            #       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-            # TODO: move the header part outside and only send that once.
-            yield (b'Age: {}'.format(0) +
-                   b'Cache-Control: no-cache, private' +
-                   b'Pragma: no-cache' +
-                   b'Content-Type: multipart/x-mixed-replace; boundary=FRAME' +
-                   b'--FRAME\r\n' +
-                   b'Content-Type: image/jpeg\r\n\r\n' +
-                   b'Content-Length: {}\r\n\r\n'.format(len(frame)) + frame + b'\r\n')
+            wrapped_frame = (b'--frame\r\n' +
+                             b'Content-Type: image/jpeg\r\n\r\n')
+
+            # TODO: figure out the difference here and why it is needed...
+            #       for some reason, web can't handle this...
+            if self.is_mobile:
+               wrapped_frame += b'Content-Length: {}\r\n\r\n'.format(len(frame))
+
+            wrapped_frame += frame + b'\r\n'
+
+            yield wrapped_frame
 
     def video_feed(self):
         """
         Video streaming route. Put this in the src attribute of an img tag.
         """
-        # self.wfile.write(b'--FRAME\r\n')
-        # self.send_header('Content-Type', 'image/jpeg')
-        # self.send_header('Content-Length', len(frame))
-        # self.end_headers()
-        # self.wfile.write(frame)
-        # self.wfile.write(b'\r\n')
-
-        # TODO: does mimetype need to be here?
-        return Response(response=stream_with_context(self.generate_frame(Camera())),
+        return Response(response=stream_with_context(
+                            self.generate_frame(Camera())),
+                        mimetype=self.headers['Content-Type'],
+                        headers=self.headers,
                         status=200,
-                        mimetype='multipart/x-mixed-replace; boundary=frame')
+                        )
