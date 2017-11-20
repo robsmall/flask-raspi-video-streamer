@@ -5,6 +5,8 @@ Flask-RESTful API to create and serve up a live-stream from a raspberry pi to we
 
 Original code borrowed/altered from [miguelgrinberg/flask-video-streaming](https://github.com/miguelgrinberg/flask-video-streaming).
 
+Android client is available at [robsmall/raspi-video-streamer-app](https://github.com/robsmall/raspi-video-streamer-app).
+
 Set Up A Virtual Environment To Run The App Using Virtualenv On A Pi
 --------------------------------------------------------------------
 
