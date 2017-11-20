@@ -1,13 +1,9 @@
 flask-raspi-video-streamer
-=====================
+==========================
 
-Original code borrowed from [miguelgrinberg/flask-video-streaming](https://github.com/miguelgrinberg/flask-video-streaming).
+Flask-RESTful API to create and serve up a live-stream from a raspberry pi to web and android clients.
 
-TODO
-----
-- This is currently set up for `pi_android` and I doubt anything else works... fix that.
-- Get this to work with web clients or allow for running of the one-off `simple_mjpeg-server.py` script.
-- See TODOs in `video_feed.py`
+Original code borrowed/altered from [miguelgrinberg/flask-video-streaming](https://github.com/miguelgrinberg/flask-video-streaming).
 
 Set Up A Virtual Environment To Run The App Using Virtualenv On A Pi
 --------------------------------------------------------------------
@@ -48,3 +44,18 @@ Instead of running the app directly using python, run
 ```
 $ gunicorn --threads 5 --workers 1 --bind 0.0.0.0:5000 app:app
 ```
+
+
+Resources
+---------
+- [miguelgrinberg/flask-video-streaming](https://github.com/miguelgrinberg/flask-video-streaming)
+    - Also see linked articles in repo's README
+- [PiCamera Python Docs](http://picamera.readthedocs.io/en/latest)
+    - [Web Streaming Example](http://picamera.readthedocs.io/en/latest/recipes2.html#web-streaming)
+
+
+TODO
+----
+- This is currently set up for `pi_android`, hook everything else up to work properly too.
+- Get this to work with web clients or allow for running of the one-off `simple_mjpeg-server.py` script.
+- See TODOs in `video_feed.py`

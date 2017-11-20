@@ -12,7 +12,6 @@ class StreamingOutput(object):
     def __init__(self):
         self.frame = None
         self.buffer = io.BytesIO()
-        # self.condition = Condition()
 
     def write(self, buf):
         if buf.startswith(b'\xff\xd8'):
@@ -30,10 +29,16 @@ class Camera(BaseCamera):
 
     @staticmethod
     def start_recording():
-        Camera.camera.start_recording(Camera.output, format='mjpeg')
+        """ Start recording from the camera object. """
+        # Only start the camera if there are no users currently blocking
+        # the camera. If there are, the feed will be started when they
+        # re-enable the camera.
+        if not USER_STOP_LIST:
+            Camera.camera.start_recording(Camera.output, format='mjpeg')
 
     @staticmethod
     def stop_recording():
+        """ Stop the Camera object from recording. """
         Camera.camera.stop_recording()
 
     @staticmethod
@@ -42,11 +47,7 @@ class Camera(BaseCamera):
             Camera.camera = camera
             Camera.output = StreamingOutput()
 
-            # Only start the camera if there are no users currently blocking
-            # the camera. If there are, the feed will be started when they
-            # re-enable the camera.
-            if not USER_STOP_LIST:
-                Camera.start_recording()
+            Camera.start_recording()
             
             while True:
                 # with self.output.condition:

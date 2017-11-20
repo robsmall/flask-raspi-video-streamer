@@ -16,23 +16,27 @@ from base import BaseHandler
 # Import camera driver
 if os.environ.get('CAMERA'):
     Camera = import_module('camera_' + os.environ['CAMERA']).Camera
-    # TODO: lets remove everything but the android camera one... or duplicate
-    # functionality and remove code
     USER_STOP_LIST = import_module('camera_' + os.environ['CAMERA']).USER_STOP_LIST
 else:
     from camera import Camera
     from camera import USER_STOP_LIST
 
-'''
+
+"""
 TODOS:
+    - Add a security layer. Probably an authN scheme to view the feed.
     - Wrapper function to get and set the uid
     - Error return wrapper
     - Log datetime.datetime.now with all logs and wrap it in a function
     - See TODO in generate_frame()
     - Deal with coming back after camera was destroyed when the camera is
       disabled client side
-    - See TODO in video_feed()
-'''
+    - Add start and stop recording functionality to other cameras than
+      camera_pi_android
+    - Only allow disable/enable if uid is set. Maybe even only if the UID
+      is in a map that we create when you ask for access
+"""
+
 
 class EnableFeedHandler(BaseHandler):
     """

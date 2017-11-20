@@ -4,6 +4,9 @@ import picamera
 from base_camera import BaseCamera
 
 
+USER_STOP_LIST = set()
+
+
 class Camera(BaseCamera):
     @staticmethod
     def frames():

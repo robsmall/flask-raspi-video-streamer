@@ -9,6 +9,9 @@ from http import server
 # for python 2
 #import SimpleHTTPServer
 
+"""
+Copied from: http://picamera.readthedocs.io/en/latest/recipes2.html#web-streaming
+"""
 
 PAGE="""\
 <html>
