@@ -6,12 +6,13 @@ import sys
 from importlib import import_module
 from flask import Response
 from flask import stream_with_context
+import flask_restful as restful
 from flask_restful import Resource
 from flask_restful import reqparse
 from flask_restful import inputs
 from picamera import PiCameraNotRecording
 
-from base import BaseHandler
+import base
 
 # Import camera driver
 if os.environ.get('CAMERA'):
@@ -25,9 +26,7 @@ else:
 """
 TODOS:
     - Add a security layer. Probably an authN scheme to view the feed.
-    - Wrapper function to get and set the uid
     - Error return wrapper
-    - Log datetime.datetime.now with all logs and wrap it in a function
     - See TODO in generate_frame()
     - Deal with coming back after camera was destroyed when the camera is
       disabled client side
@@ -38,7 +37,7 @@ TODOS:
 """
 
 
-class EnableFeedHandler(BaseHandler):
+class EnableFeedHandler(base.BaseHandler):
     """
     Handler to enable the feed for all cameras.
 
@@ -49,11 +48,14 @@ class EnableFeedHandler(BaseHandler):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('uid', type=str)
 
+    @base.set_args
     def post(self):
-        args = self.parser.parse_args()
-        self.uid = args.get('uid', None)
+        self.log_message("Enable feed called from user.")
 
-        print("Enable feed called from user: {}".format(self.uid))
+        if not self.uid:
+            error = "uid required to enable video feed."
+            self.log_message(error)
+            restful.abort(403, error=error)
 
         self.enable_cameras()
 
@@ -70,13 +72,14 @@ class EnableFeedHandler(BaseHandler):
         """
         if self.uid in USER_STOP_LIST:
             USER_STOP_LIST.remove(self.uid)
-            print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
+            self.log_message('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
 
-            if not USER_STOP_LIST:
-                Camera.start_recording()
+        if not USER_STOP_LIST:
+            self.log_message("Starting recording...")
+            Camera.start_recording()
             
 
-class DisableFeedHandler(BaseHandler):
+class DisableFeedHandler(base.BaseHandler):
     """
     Handler to disable the feed for all camera listeners.
     """
@@ -84,11 +87,14 @@ class DisableFeedHandler(BaseHandler):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('uid', type=str)
 
+    @base.set_args
     def post(self):
-        args = self.parser.parse_args()
-        self.uid = args.get('uid', None)
+        self.log_message("Disable feed called.")
 
-        print("Disable feed called from user: {}".format(self.uid))
+        if not self.uid:
+            error = "uid required to disable video feed."
+            self.log_message(error)
+            restful.abort(403, error=error)
 
         self.disable_camera()
 
@@ -101,15 +107,16 @@ class DisableFeedHandler(BaseHandler):
     def disable_camera(self):
         USER_STOP_LIST.add(self.uid)
 
-        print('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
+        self.log_message('\nUser Stop List: {}\n'.format(USER_STOP_LIST))
 
         try:
+            self.log_message("Stopping recording...")
             Camera.stop_recording()
         except PiCameraNotRecording as e:
-            print("Camera is not currently recording. Doing nothing...")
+            self.log_message("Camera is not currently recording. Doing nothing...", error=e)
 
 
-class VideoFeedHandler(BaseHandler):
+class VideoFeedHandler(base.BaseHandler):
     """
     Handler to start the feed for the camera and add the given user to the
     USER_LIST.
@@ -126,13 +133,16 @@ class VideoFeedHandler(BaseHandler):
         self.parser.add_argument('uid', type=str)
         self.parser.add_argument('is_mobile', type=inputs.boolean, default=False)
 
+    @base.set_args
     def get(self):
-        args = self.parser.parse_args()
-        self.uid = args.get('uid', None)
-        self.is_mobile = args.get('is_mobile')
+        self.is_mobile = self.args.get('is_mobile')
 
-        print("uid: {}".format(self.uid))
-        print("is_mobile: {}".format(self.is_mobile))
+        self.log_message("Camera feed requested.", is_mobile=self.is_mobile)
+
+        if not self.uid:
+            # TODO: validate that this is a uuid, or even better, do actual auth
+            self.log_message("No uid provided for streaming, aborting with 403")
+            restful.abort(403, error="uid required to view video feed.")
 
         return self.video_feed()
 
