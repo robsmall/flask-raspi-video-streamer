@@ -152,14 +152,10 @@ class VideoFeedHandler(base.BaseHandler):
             frame = camera.get_frame()
 
             wrapped_frame = (b'--frame\r\n' +
-                             b'Content-Type: image/jpeg\r\n\r\n')
+                             b'Content-Type: image/jpeg\r\n' +
+                             b'Content-Length: {}\r\n\r\n'.format(len(frame))
+                             + frame + b'\r\n')
 
-            # TODO: figure out the difference here and why it is needed...
-            #       for some reason, web can't handle this...
-            if self.is_mobile:
-               wrapped_frame += b'Content-Length: {}\r\n\r\n'.format(len(frame))
-
-            wrapped_frame += frame + b'\r\n'
 
             yield wrapped_frame
 
