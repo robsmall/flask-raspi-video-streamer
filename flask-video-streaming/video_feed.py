@@ -131,13 +131,11 @@ class VideoFeedHandler(base.BaseHandler):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('uid', type=str)
-        self.parser.add_argument('is_mobile', type=inputs.boolean, default=False)
 
     @base.set_args
     def get(self):
-        self.is_mobile = self.args.get('is_mobile')
 
-        self.log_message("Camera feed requested.", is_mobile=self.is_mobile)
+        self.log_message("Camera feed requested.")
 
         if not self.uid:
             # TODO: validate that this is a uuid, or even better, do actual auth
