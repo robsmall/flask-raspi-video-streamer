@@ -131,13 +131,11 @@ class VideoFeedHandler(base.BaseHandler):
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('uid', type=str)
-        self.parser.add_argument('is_mobile', type=inputs.boolean, default=False)
 
     @base.set_args
     def get(self):
-        self.is_mobile = self.args.get('is_mobile')
 
-        self.log_message("Camera feed requested.", is_mobile=self.is_mobile)
+        self.log_message("Camera feed requested.")
 
         if not self.uid:
             # TODO: validate that this is a uuid, or even better, do actual auth
@@ -152,14 +150,10 @@ class VideoFeedHandler(base.BaseHandler):
             frame = camera.get_frame()
 
             wrapped_frame = (b'--frame\r\n' +
-                             b'Content-Type: image/jpeg\r\n\r\n')
+                             b'Content-Type: image/jpeg\r\n' +
+                             b'Content-Length: {}\r\n\r\n'.format(len(frame))
+                             + frame + b'\r\n')
 
-            # TODO: figure out the difference here and why it is needed...
-            #       for some reason, web can't handle this...
-            if self.is_mobile:
-               wrapped_frame += b'Content-Length: {}\r\n\r\n'.format(len(frame))
-
-            wrapped_frame += frame + b'\r\n'
 
             yield wrapped_frame
 
